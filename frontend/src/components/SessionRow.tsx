@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock, CheckCircle2, XCircle } from "lucide-react";
-import type { Session } from "@/lib/mock-data";
 
-export default function SessionRow({ session, index }: { session: Session; index: number }) {
+export default function SessionRow({ session, index }: { session: any; index: number }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
@@ -16,7 +15,7 @@ export default function SessionRow({ session, index }: { session: Session; index
         {session.status === "completed" ? <CheckCircle2 size={20} /> : <XCircle size={20} />}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="font-medium text-foreground truncate">{session.note}</p>
+        <p className="font-medium text-foreground truncate">{session.note || "No note"}</p>
         <p className="text-sm text-muted-foreground">{session.date} · {session.startTime} – {session.endTime}</p>
       </div>
       <div className="flex items-center gap-1 text-sm font-medium text-muted-foreground">

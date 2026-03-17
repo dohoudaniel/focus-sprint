@@ -21,7 +21,7 @@ def create_app():
     app = Flask(__name__)
 
     # Configuration
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///focus_sprint.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SUPABASE_URL', 'sqlite:///focus_sprint.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY', 'dev-secret-key')
     app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=24)

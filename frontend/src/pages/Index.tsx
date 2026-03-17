@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AnimatedSection from "@/components/AnimatedSection";
+import { useAuth } from "@/hooks/use-auth";
 
 const features = [
   { icon: Timer, title: "Precision Timer", desc: "25, 50, or custom minute sessions with a beautiful circular progress ring." },
@@ -14,6 +15,8 @@ const features = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-primary focus:text-primary-foreground focus:p-3">
@@ -39,16 +42,18 @@ export default function LandingPage() {
               </p>
               <div className="mt-8 flex flex-wrap gap-4">
                 <div className="relative">
-                  <span className="absolute inset-0 rounded-button bg-primary animate-pulse_ring pointer-events-none" />
+                  {!isAuthenticated && <span className="absolute inset-0 rounded-button bg-primary animate-pulse_ring pointer-events-none" />}
                   <Button asChild size="lg" className="relative rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95 gap-2 px-8">
-                    <Link to="/auth/signup">
-                      Start Focusing — Free <ArrowRight size={16} />
+                    <Link to={isAuthenticated ? "/app" : "/auth/signup"}>
+                      {isAuthenticated ? "Go to Dashboard" : "Start Focusing — Free"} <ArrowRight size={16} />
                     </Link>
                   </Button>
                 </div>
-                <Button asChild size="lg" variant="outline" className="rounded-button gap-2 px-8">
-                  <Link to="/app">See Demo</Link>
-                </Button>
+                {!isAuthenticated && (
+                  <Button asChild size="lg" variant="outline" className="rounded-button gap-2 px-8">
+                    <Link to="/auth/login">Log In</Link>
+                  </Button>
+                )}
               </div>
             </motion.div>
 
@@ -92,7 +97,9 @@ export default function LandingPage() {
           <h2 className="text-3xl font-bold text-foreground md:text-4xl">Ready to build your focus habit?</h2>
           <p className="mt-4 text-muted-foreground">Join thousands who track their deep work with FocusSprint.</p>
           <Button asChild size="lg" className="mt-8 rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95 gap-2 px-10">
-            <Link to="/auth/signup">Get Started Free <ArrowRight size={16} /></Link>
+            <Link to={isAuthenticated ? "/app" : "/auth/signup"}>
+               {isAuthenticated ? "Go to Dashboard" : "Get Started Free"} <ArrowRight size={16} />
+            </Link>
           </Button>
         </AnimatedSection>
       </main>

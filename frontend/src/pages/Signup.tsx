@@ -4,15 +4,31 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/app");
+    setIsSubmitting(true);
+    try {
+      await apiFetch("/api/auth/register", {
+        method: "POST",
+        body: JSON.stringify({ email, password, name }),
+      });
+      toast.success("Account created successfully! Please log in.");
+      navigate("/auth/login");
+    } catch (error: any) {
+      toast.error(error.message || "Signup failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -35,15 +51,19 @@ export default function SignupPage() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
+            <Label htmlFor="name">Name</Label>
+            <Input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your Name" className="mt-1 rounded-button" disabled={isSubmitting} />
+          </div>
+          <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-1 rounded-button" required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-1 rounded-button" required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-1 rounded-button" required minLength={8} />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-1 rounded-button" required minLength={8} disabled={isSubmitting} />
           </div>
-          <Button type="submit" className="w-full rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95">
-            Start Focusing — Free
+          <Button type="submit" className="w-full rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account..." : "Start Focusing — Free"}
           </Button>
         </form>
 

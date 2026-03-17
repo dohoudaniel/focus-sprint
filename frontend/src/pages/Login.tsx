@@ -1,19 +1,33 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/use-auth";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { login } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock login
-    navigate("/app");
+    setIsSubmitting(true);
+    try {
+      const data = await apiFetch("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, password }),
+      });
+      login(data.access_token, data.user);
+    } catch (error: any) {
+      toast.error(error.message || "Login failed");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -37,21 +51,16 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-1 rounded-button" required />
+            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="mt-1 rounded-button" required disabled={isSubmitting} />
           </div>
           <div>
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-1 rounded-button" required />
+            <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="mt-1 rounded-button" required disabled={isSubmitting} />
           </div>
-          <Button type="submit" className="w-full rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95">
-            Log in
+          <Button type="submit" className="w-full rounded-button bg-primary text-primary-foreground shadow-card hover:brightness-95" disabled={isSubmitting}>
+            {isSubmitting ? "Logging in..." : "Log in"}
           </Button>
         </form>
-
-        <div className="mt-4 space-y-2">
-          <button disabled className="w-full rounded-button border border-border bg-card py-2 text-sm text-muted-foreground opacity-60 cursor-not-allowed">Continue with Google</button>
-          <button disabled className="w-full rounded-button border border-border bg-card py-2 text-sm text-muted-foreground opacity-60 cursor-not-allowed">Continue with GitHub</button>
-        </div>
 
         <p className="mt-6 text-center text-sm text-muted-foreground">
           Don't have an account? <Link to="/auth/signup" className="font-medium text-primary hover:underline">Sign up</Link>

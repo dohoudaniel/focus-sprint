@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import { Play, Pause, Square, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { apiFetch } from "@/lib/api";
+import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 const PRESETS = [25, 50, 90];
 
@@ -13,8 +16,10 @@ export default function TimerCard() {
   const [running, setRunning] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [note, setNote] = useState("");
+  const [startTime, setStartTime] = useState<string | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const announceRef = useRef<HTMLDivElement>(null);
+  const { isAuthenticated } = useAuth();
 
   const announce = (msg: string) => {
     if (announceRef.current) announceRef.current.textContent = msg;
@@ -31,6 +36,8 @@ export default function TimerCard() {
   const start = useCallback(() => {
     setRunning(true);
     setCompleted(false);
+    const now = new Date();
+    setStartTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }));
     announce(`Session started — ${preset} minutes`);
   }, [preset]);
 
@@ -43,7 +50,33 @@ export default function TimerCard() {
     setRunning(false);
     setRemaining(totalSeconds);
     setCompleted(false);
+    setStartTime(null);
     announce("Session stopped");
+  };
+
+  const logSession = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const now = new Date();
+      const endTime = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+      const date = now.toISOString().split('T')[0];
+      
+      await apiFetch("/api/sessions", {
+        method: "POST",
+        body: JSON.stringify({
+          duration: preset,
+          startTime: startTime,
+          endTime: endTime,
+          date: date,
+          note: note,
+          status: "completed"
+        }),
+      });
+      toast.success("Session logged successfully!");
+    } catch (error: any) {
+      toast.error("Failed to log session: " + error.message);
+    }
   };
 
   useEffect(() => {
@@ -55,11 +88,12 @@ export default function TimerCard() {
       setRunning(false);
       setCompleted(true);
       announce(`Session completed — ${preset} minutes logged`);
+      logSession();
     }
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [running, remaining, preset]);
+  }, [running, remaining, preset, isAuthenticated]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {

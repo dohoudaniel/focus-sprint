@@ -4,17 +4,31 @@ import Navbar from "@/components/Navbar";
 import SessionRow from "@/components/SessionRow";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { mockSessions } from "@/lib/mock-data";
+import { useQuery } from "@tanstack/react-query";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/hooks/use-auth";
+import { Navigate } from "react-router-dom";
 
 export default function HistoryPage() {
   const [search, setSearch] = useState("");
-  const filtered = mockSessions.filter((s) =>
-    s.note.toLowerCase().includes(search.toLowerCase())
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ["sessions"],
+    queryFn: () => apiFetch("/api/sessions"),
+    enabled: isAuthenticated,
+  });
+
+  if (authLoading) return null;
+  if (!isAuthenticated) return <Navigate to="/auth/login" />;
+
+  const filtered = sessions.filter((s: any) =>
+    (s.note || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const exportCSV = () => {
     const header = "Date,Start,End,Duration,Note,Status\n";
-    const rows = mockSessions.map((s) => `${s.date},${s.startTime},${s.endTime},${s.duration},${s.note},${s.status}`).join("\n");
+    const rows = sessions.map((s: any) => `${s.date},${s.startTime},${s.endTime},${s.duration},${s.note},${s.status}`).join("\n");
     const blob = new Blob([header + rows], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -30,7 +44,10 @@ export default function HistoryPage() {
       <main className="container flex-1 py-8">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h1 className="text-2xl font-bold text-foreground">Session History</h1>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-bold text-foreground">Session History</h1>
+              <p className="text-sm text-muted-foreground">{sessions.length} sessions logged total</p>
+            </div>
             <div className="flex gap-3">
               <Input
                 value={search}
@@ -45,10 +62,12 @@ export default function HistoryPage() {
             </div>
           </div>
           <div className="flex flex-col gap-3">
-            {filtered.length === 0 ? (
+            {sessionsLoading ? (
+               <p className="py-12 text-center text-muted-foreground">Loading sessions...</p>
+            ) : filtered.length === 0 ? (
               <p className="py-12 text-center text-muted-foreground">No sessions match your filter.</p>
             ) : (
-              filtered.map((s, i) => <SessionRow key={s.id} session={s} index={i} />)
+              filtered.map((s: any, i: number) => <SessionRow key={s.id} session={s} index={i} />)
             )}
           </div>
         </div>

@@ -1,8 +1,18 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/use-auth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navLinks = [
   { label: "Product", href: "/#features" },
@@ -12,7 +22,15 @@ const navLinks = [
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const isApp = location.pathname.startsWith("/app") || location.pathname.startsWith("/history") || location.pathname.startsWith("/insights");
+  const { user, logout, isAuthenticated } = useAuth();
+  
+  const isApp = location.pathname.startsWith("/app") || 
+                location.pathname.startsWith("/history") || 
+                location.pathname.startsWith("/insights");
+
+  const initials = user?.name 
+    ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
+    : user?.email[0].toUpperCase() || "U";
 
   return (
     <motion.header
@@ -42,11 +60,48 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {isApp ? (
+          
+          {isAuthenticated ? (
             <>
-              <Link to="/app" className={`text-sm font-medium transition-colors ${location.pathname === "/app" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>Dashboard</Link>
-              <Link to="/history" className={`text-sm font-medium transition-colors ${location.pathname === "/history" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>History</Link>
-              <Link to="/insights" className={`text-sm font-medium transition-colors ${location.pathname === "/insights" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>Insights</Link>
+              {isApp && (
+                <>
+                  <Link to="/app" className={`text-sm font-medium transition-colors ${location.pathname === "/app" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>Dashboard</Link>
+                  <Link to="/history" className={`text-sm font-medium transition-colors ${location.pathname === "/history" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>History</Link>
+                  <Link to="/insights" className={`text-sm font-medium transition-colors ${location.pathname === "/insights" ? "text-primary" : "text-muted-foreground hover:text-foreground"}`}>Insights</Link>
+                </>
+              )}
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+                    <Avatar className="h-9 w-9 border border-border">
+                      <AvatarFallback className="bg-primary/10 text-xs font-bold text-primary">
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.name || "User"}</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {!isApp && (
+                    <DropdownMenuItem asChild>
+                      <Link to="/app">Dashboard</Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuItem onClick={logout} className="text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -78,11 +133,14 @@ export default function Navbar() {
             className="overflow-hidden border-t border-border md:hidden bg-background"
           >
             <nav className="container flex flex-col gap-3 py-4">
-              {isApp ? (
+              {isAuthenticated ? (
                 <>
                   <Link to="/app" onClick={() => setMobileOpen(false)} className="py-2 text-sm font-medium text-foreground">Dashboard</Link>
                   <Link to="/history" onClick={() => setMobileOpen(false)} className="py-2 text-sm font-medium text-foreground">History</Link>
                   <Link to="/insights" onClick={() => setMobileOpen(false)} className="py-2 text-sm font-medium text-foreground">Insights</Link>
+                  <button onClick={() => { logout(); setMobileOpen(false); }} className="flex items-center py-2 text-sm font-medium text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" /> Log out
+                  </button>
                 </>
               ) : (
                 <>
