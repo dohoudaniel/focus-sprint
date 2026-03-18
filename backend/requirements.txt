@@ -7,3 +7,5 @@ python-dotenv
 psycopg2-binary
 Werkzeug
 google-generativeai
+flask-limiter
+gunicorn
