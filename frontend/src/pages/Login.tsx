@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Loader2, ArrowRight, Zap, Target, BarChart, Clock, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />;
+  }
 
   const isEmailValid = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
   const canSubmit = isEmailValid && password.length >= 8 && !isSubmitting;

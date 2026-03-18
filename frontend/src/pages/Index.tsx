@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { ArrowRight, Zap, Target, BarChart, Clock, ShieldCheck, ChevronRight, Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
@@ -78,6 +78,10 @@ function HeroTimerMock() {
 
 export default function IndexPage() {
   const { isAuthenticated } = useAuth();
+  
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />;
+  }
 
   return (
     <div className="flex min-h-screen flex-col bg-background selection:bg-primary/20">

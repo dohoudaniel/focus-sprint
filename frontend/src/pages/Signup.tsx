@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Eye, EyeOff, Check, X, ArrowRight, Zap, Target, BarChart, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import { apiFetch } from "@/lib/api";
 import { toast } from "sonner";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignupPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,11 @@ export default function SignupPage() {
   const [name, setName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
+
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />;
+  }
 
   const passwordRequirements = useMemo(() => [
     { label: "At least 8 characters", test: (p: string) => p.length >= 8 },
