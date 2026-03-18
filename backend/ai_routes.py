@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
-from models import Session, User
+from models import Session, User, ChatMessage
 import google.generativeai as genai
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/api/ai')
@@ -411,20 +411,24 @@ def ai_chat():
     sessions = get_user_sessions(user_id, limit=30)
     context = build_session_context(sessions)
 
-    # Format history for prompt
+    # Long-term memory: Fetch last 20 messages from DB for deep context
+    db_messages = ChatMessage.query.filter_by(user_id=user_id).order_by(ChatMessage.created_at.desc()).limit(20).all()
+    db_messages.reverse() # Order chronologically for the LLM
+    
     history_str = ""
-    for turn in history[-10:]: # Keep only last 10 exchanges
-        role = "User" if turn["role"] == "user" else "Coach"
-        history_str += f"{role}: {turn['content']}\n"
+    for m in db_messages:
+        role = "User" if m.role == "user" else "Coach"
+        history_str += f"{role}: {m.content}\n"
 
     system_instruction = f"""You are the FocusSprint AI Productivity Coach. 
 Your primary purpose is to help the user master their productivity using FocusSprint.
 
 CORE PRINCIPLES:
 1. ONLY discuss productivity, habits, deep work, and session history.
-2. If the user wanders off-topic (news, code, entertainment), politely and firmly redirect them to focus. 
-3. Use their data to give specific, high-impact feedback.
-4. Keep replies crisp and professional.
+2. If the user wanders off-topic, politely and firmly redirect them to focus. 
+3. Use their data and PREVIOUS CONVERSATIONS to give highly specific, high-impact feedback.
+4. If you notice patterns mentioned in older messages, reference them (e.g., "Last time we talked about X, how is that going?").
+5. Keep replies crisp and professional.
 """
 
     user_prompt = f"""USER DATA (Last 30 sessions):
@@ -434,8 +438,36 @@ CHAT HISTORY:
 {history_str}
 User: {message}"""
 
+    # Store user message
+    user_msg = ChatMessage(user_id=user_id, role="user", content=message)
+    db.session.add(user_msg)
+    
+    # Get reply
     reply = call_gemini(user_prompt, system_instruction)
+    
+    # Store bot message
+    bot_msg = ChatMessage(user_id=user_id, role="bot", content=reply)
+    db.session.add(bot_msg)
+    db.session.commit()
+    
     return jsonify({"reply": reply})
+
+
+@ai_bp.route('/chat/history', methods=['GET'])
+@jwt_required()
+def get_chat_history():
+    user_id = get_jwt_identity()
+    messages = ChatMessage.query.filter_by(user_id=user_id).order_by(ChatMessage.created_at.asc()).all()
+    return jsonify([m.to_dict() for m in messages])
+
+
+@ai_bp.route('/chat', methods=['DELETE'])
+@jwt_required()
+def clear_chat_history():
+    user_id = get_jwt_identity()
+    ChatMessage.query.filter_by(user_id=user_id).delete()
+    db.session.commit()
+    return jsonify({"msg": "Chat history cleared"}), 200
 
 
 @ai_bp.route('/recommendations', methods=['GET'])
