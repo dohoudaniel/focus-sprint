@@ -6,6 +6,7 @@ import StatCard from "@/components/StatCard";
 import SessionRow from "@/components/SessionRow";
 import DailyFocusPlan from "@/components/DailyFocusPlan";
 import FocusScore from "@/components/FocusScore";
+import AIRecommendations from "@/components/AIRecommendations";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate, Link } from "react-router-dom";
@@ -103,10 +104,56 @@ export default function DashboardPage() {
             >
               <DailyFocusPlan />
             </motion.div>
+
+            {/* Recent Sessions */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-4 rounded-3xl border border-border/40 bg-card/30 p-6 shadow-sm backdrop-blur-sm"
+            >
+              <div className="flex items-center justify-between px-1">
+                <h3 className="text-sm font-black uppercase tracking-widest text-foreground flex items-center gap-2">
+                  <Calendar size={15} className="text-primary" />
+                  Recent Sessions
+                </h3>
+                <Link
+                  to="/history"
+                  className="text-[10px] font-black uppercase tracking-widest text-primary hover:underline flex items-center gap-0.5"
+                >
+                  All <ChevronRight size={12} />
+                </Link>
+              </div>
+
+              {sessionsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+                  ))}
+                </div>
+              ) : recentSessions.length > 0 ? (
+                <div className="space-y-2">
+                  {recentSessions.map((s: any, i: number) => (
+                    <div key={s.id} className="group relative overflow-hidden rounded-2xl border border-border/40 bg-background/50 hover:bg-background transition-all hover:border-primary/20">
+                        <SessionRow session={s} index={i} />
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-12 text-center rounded-2xl border border-dashed border-border/30 bg-muted/5">
+                  <p className="text-muted-foreground text-[10px] font-black uppercase tracking-widest">
+                    No sessions yet
+                  </p>
+                </div>
+              )}
+            </motion.div>
           </div>
 
           {/* ── Sidebar ── */}
           <aside className="space-y-4">
+
+            {/* AI Recommendations */}
+            <AIRecommendations />
 
             {/* Performance label */}
             <h2 className="text-lg font-bold text-foreground px-1">Performance</h2>
@@ -151,63 +198,10 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Recent Sessions */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between px-1">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
-                  <Calendar size={15} className="text-primary" />
-                  Recent Sessions
-                </h3>
-                <Link
-                  to="/history"
-                  className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-0.5"
-                >
-                  All <ChevronRight size={12} />
-                </Link>
-              </div>
-
-              {sessionsLoading ? (
-                <div className="space-y-2">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-16 w-full rounded-xl" />
-                  ))}
-                </div>
-              ) : recentSessions.length > 0 ? (
-                <div className="space-y-2">
-                  {recentSessions.map((s: any, i: number) => (
-                    <SessionRow key={s.id} session={s} index={i} />
-                  ))}
-                </div>
-              ) : (
-                <div className="py-8 text-center rounded-2xl border border-dashed border-border/50 bg-muted/10">
-                  <p className="text-muted-foreground text-xs font-medium">
-                    No sessions yet — start your first sprint!
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* AI Insights shortcut */}
-            <Link
-              to="/insights"
-              className="flex items-center justify-between rounded-2xl border border-primary/20 bg-primary/5 p-4 hover:bg-primary/10 transition-colors group"
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
-                  <Brain size={16} className="text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">AI Insights</p>
-                  <p className="text-xs text-muted-foreground">Coach · Burnout · Schedule</p>
-                </div>
-              </div>
-              <ChevronRight size={16} className="text-muted-foreground group-hover:text-primary transition-colors" />
-            </Link>
-
             {/* Keyboard hints */}
-            <div className="rounded-2xl border border-border/40 bg-muted/30 p-4 text-center text-[11px] text-muted-foreground">
-              <p>Press <kbd className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold text-foreground">Space</kbd> to toggle</p>
-              <p className="mt-1">Press <kbd className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-bold text-foreground">Esc</kbd> to end</p>
+            <div className="rounded-2xl border border-border/40 bg-muted/30 p-4 text-center text-[11px] text-muted-foreground font-display">
+              <p>Press <kbd className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-black text-foreground border border-border/50">Space</kbd> to toggle</p>
+              <p className="mt-1">Press <kbd className="rounded bg-secondary px-1.5 py-0.5 text-[10px] font-black text-foreground border border-border/50">Esc</kbd> to end</p>
             </div>
 
           </aside>

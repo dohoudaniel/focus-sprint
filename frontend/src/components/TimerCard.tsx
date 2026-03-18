@@ -3,160 +3,53 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, Square, Check, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { apiFetch } from "@/lib/api";
-import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
-import { useQueryClient } from "@tanstack/react-query";
+import { useTimer } from "@/contexts/TimerContext";
 import { loadSettings } from "@/pages/Settings";
 
 const PRESETS = [25, 50, 90] as const;
 
-function playChime() {
-  try {
-    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.frequency.setValueAtTime(880, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.3);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
-    osc.start(ctx.currentTime);
-    osc.stop(ctx.currentTime + 0.6);
-  } catch {
-    // Audio not available
-  }
-}
-
-function sendNotification(preset: number) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification("🎯 Sprint Complete!", {
-      body: `Excellent work — ${preset} minutes of focused output logged. Take a well-deserved break.`,
-      icon: "/logo.png",
-    });
-  }
-}
-
 export default function TimerCard() {
-  const settings = loadSettings();
-  const [preset, setPreset] = useState<number>(settings.defaultPreset);
-  const [totalSeconds, setTotalSeconds] = useState(settings.defaultPreset * 60);
-  const [remaining, setRemaining] = useState(settings.defaultPreset * 60);
-  const [running, setRunning] = useState(false);
-  const [completed, setCompleted] = useState(false);
-  const [note, setNote] = useState("");
-  const [startTime, setStartTime] = useState<string | null>(null);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const {
+    preset, remaining, totalSeconds, running, completed, note,
+    setNote, start, pause, stop, selectPreset
+  } = useTimer();
+
+  const [customInput, setCustomInput] = useState<number | string>(
+    PRESETS.includes(preset as any) ? "" : preset
+  );
+  
   const announceRef = useRef<HTMLDivElement>(null);
-  const { isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
+  const isPreset = PRESETS.includes(preset as any);
 
   const announce = (msg: string) => {
     if (announceRef.current) announceRef.current.textContent = msg;
   };
 
-  const selectPreset = (mins: number) => {
-    if (running) return;
-    setPreset(mins);
-    setTotalSeconds(mins * 60);
-    setRemaining(mins * 60);
-    setCompleted(false);
-  };
-
-  const start = useCallback(() => {
-    setRunning(true);
-    setCompleted(false);
-    const now = new Date();
-    setStartTime(now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }));
-    announce(`Session started — ${preset} minutes`);
-  }, [preset]);
-
-  const pause = () => {
-    setRunning(false);
-    announce("Session paused");
-  };
-
-  const stop = () => {
-    setRunning(false);
-    setRemaining(totalSeconds);
-    setCompleted(false);
-    setStartTime(null);
-    announce("Session stopped");
-  };
-
-  const logSession = async () => {
-    if (!isAuthenticated) return;
-    try {
-      const now = new Date();
-      const endTime = now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
-      const date = now.toISOString().split("T")[0];
-
-      await apiFetch("/api/sessions", {
-        method: "POST",
-        body: JSON.stringify({
-          duration: preset,
-          startTime: startTime,
-          endTime: endTime,
-          date: date,
-          note: note,
-          status: "completed",
-        }),
-      });
-
-      // Invalidate session queries so UI refreshes
-      queryClient.invalidateQueries({ queryKey: ["sessions"] });
-      queryClient.invalidateQueries({ queryKey: ["ai-daily-plan"] });
-
-      toast.success(`${preset}min sprint logged ✓`, {
-        description: note ? `"${note}"` : undefined,
-      });
-    } catch (error: any) {
-      toast.error("Failed to log session: " + error.message);
+  const handleSelectPreset = (mins: number) => {
+    selectPreset(mins);
+    if (!PRESETS.includes(mins as any)) {
+      setCustomInput(mins);
+    } else {
+      setCustomInput("");
     }
   };
-
-  useEffect(() => {
-    if (running && remaining > 0) {
-      intervalRef.current = setInterval(() => {
-        setRemaining((r) => r - 1);
-      }, 1000);
-    } else if (remaining <= 0 && running) {
-      setRunning(false);
-      setCompleted(true);
-      announce(`Session completed — ${preset} minutes logged`);
-
-      // Notifications  
-      const s = loadSettings();
-      if (s.notificationSound) playChime();
-      if (s.notificationsEnabled) sendNotification(preset);
-
-      logSession();
-    }
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [running, remaining, preset, isAuthenticated]);
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
-      // Space: start/pause
       if (e.code === "Space") {
         e.preventDefault();
         running ? pause() : start();
       }
-      // Escape: stop
       if (e.code === "Escape" && (running || completed)) stop();
-      // Number keys 1,2,3: switch preset
-      if (e.code === "Digit1") selectPreset(25);
-      if (e.code === "Digit2") selectPreset(50);
-      if (e.code === "Digit3") selectPreset(90);
+      if (e.code === "Digit1") handleSelectPreset(25);
+      if (e.code === "Digit2") handleSelectPreset(50);
+      if (e.code === "Digit3") handleSelectPreset(90);
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [running, start, completed]);
+  }, [running, start, completed, pause, stop]);
 
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;
@@ -166,15 +59,14 @@ export default function TimerCard() {
 
   return (
     <div className="flex flex-col items-center gap-6 w-full">
-      {/* Aria live region */}
       <div ref={announceRef} aria-live="polite" className="sr-only" />
 
       {/* Preset chips */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap items-center justify-center gap-2">
         {PRESETS.map((p, i) => (
           <button
             key={p}
-            onClick={() => selectPreset(p)}
+            onClick={() => handleSelectPreset(p)}
             disabled={running}
             title={`Press ${i + 1} to switch`}
             className={`rounded-button px-4 py-1.5 text-sm font-medium transition-all ${
@@ -186,6 +78,34 @@ export default function TimerCard() {
             {p}m
           </button>
         ))}
+        
+        {/* Custom Input */}
+        <div className="flex items-center gap-2 pl-2 border-l border-border/60">
+          <div className="relative">
+            <input
+              type="number"
+              min={1}
+              max={1440}
+              value={customInput}
+              onChange={(e) => {
+                const val = e.target.value;
+                setCustomInput(val);
+                const num = parseInt(val);
+                if (!isNaN(num) && num > 0 && num <= 1440) {
+                  selectPreset(num);
+                }
+              }}
+              placeholder="Min"
+              disabled={running}
+              className={`w-16 h-8 rounded-xl px-2 text-center text-xs font-bold transition-all border outline-none ${
+                !isPreset && preset > 0
+                  ? "bg-primary/5 border-primary/40 text-primary ring-2 ring-primary/10"
+                  : "bg-secondary border-transparent text-secondary-foreground hover:border-border"
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
+            />
+          </div>
+          <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest opacity-60">Custom</span>
+        </div>
       </div>
 
       {/* Timer ring */}
@@ -228,7 +148,6 @@ export default function TimerCard() {
             )}
           </AnimatePresence>
 
-          {/* Status label under time */}
           <p className="text-xs text-muted-foreground mt-1 font-medium">
             {completed ? "Session complete ✓" : running ? "Focus mode active" : "Ready to sprint"}
           </p>
@@ -280,7 +199,6 @@ export default function TimerCard() {
         </div>
       </div>
 
-      {/* Notifications status hint */}
       {!loadSettings().notificationsEnabled && (
         <button
           onClick={async () => {
@@ -290,7 +208,7 @@ export default function TimerCard() {
                 const s = loadSettings();
                 s.notificationsEnabled = true;
                 localStorage.setItem("focussprint_settings", JSON.stringify(s));
-                toast.success("Notifications enabled for session end alerts.");
+                toast.success("Notifications enabled.");
               }
             }
           }}

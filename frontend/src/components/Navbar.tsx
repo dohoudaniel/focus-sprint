@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, LogOut, User, Settings, Sparkles } from "lucide-react";
+import { Menu, X, LogOut, User, Settings, Sparkles, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
+import { useTimer } from "@/contexts/TimerContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,15 +24,23 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
   const { user, logout, isAuthenticated } = useAuth();
+  const { remaining, running, stop, completed } = useTimer();
   
   const isApp = location.pathname.startsWith("/app") || 
                 location.pathname.startsWith("/history") || 
                 location.pathname.startsWith("/insights") ||
-                location.pathname.startsWith("/chat");
+                location.pathname.startsWith("/chat") ||
+                location.pathname.startsWith("/settings");
 
   const initials = user?.name 
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase()
     : user?.email[0].toUpperCase() || "U";
+
+  const formatTime = (s: number) => {
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    return `${m}:${sec.toString().padStart(2, '0')}`;
+  };
 
   return (
     <motion.header
@@ -41,12 +50,45 @@ export default function Navbar() {
       className="sticky top-0 z-50 border-b border-border/50 bg-background/80 backdrop-blur-lg"
     >
       <div className="container flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-button bg-primary overflow-hidden">
-            <img src="/logo.png" alt="FocusSprint" className="h-full w-full object-cover" />
-          </div>
-          <span className="font-display text-xl font-bold text-foreground">FocusSprint</span>
-        </Link>
+        <div className="flex items-center gap-6">
+          <Link to="/" className="flex items-center gap-2">
+            <div className="flex h-9 w-9 items-center justify-center rounded-button bg-primary overflow-hidden">
+              <img src="/logo.png" alt="FocusSprint" className="h-full w-full object-cover" />
+            </div>
+            <span className="font-display text-xl font-bold text-foreground">FocusSprint</span>
+          </Link>
+
+          {/* Persistent Timer Badge */}
+          <AnimatePresence>
+            {running && !completed && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                className="hidden lg:flex items-center gap-2.5 px-3 py-1 rounded-full bg-primary/5 border border-primary/20 text-primary shadow-sm"
+              >
+                <div className="relative">
+                  <Clock size={12} className="relative z-10" />
+                  <motion.div 
+                    animate={{ scale: [1, 1.5, 1], opacity: [0.5, 0, 0.5] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="absolute inset-0 bg-primary/40 rounded-full"
+                  />
+                </div>
+                <span className="text-xs font-black tabular-nums tracking-tight">
+                  {formatTime(remaining)}
+                </span>
+                <button 
+                  onClick={stop}
+                  className="hover:bg-primary/10 rounded-full p-0.5 transition-colors ml-1"
+                  title="Stop Session"
+                >
+                  <X size={10} strokeWidth={3} />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Desktop nav */}
         <nav className="hidden items-center gap-6 md:flex">

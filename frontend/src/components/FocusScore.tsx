@@ -84,12 +84,18 @@ export default function FocusScore({ focusMinutes, completedSessions, streak }: 
         </div>
 
         {/* Grade + breakdown */}
-        <div className="flex-1 space-y-1">
-          <div className="flex items-end gap-1">
-            <span className={`text-5xl font-black leading-none ${color}`}>{grade}</span>
-            <span className="text-xs text-muted-foreground mb-1 font-medium">/ 100</span>
+        <div className="flex-1 space-y-1 font-display">
+          <div className="flex flex-col">
+            <div className="flex items-end gap-1">
+              <span className={`text-5xl font-black leading-none ${color}`}>{score}</span>
+              <span className="text-xs text-muted-foreground mb-1 font-bold italic opacity-70">/ 100</span>
+            </div>
+            <div className={`mt-1.5 text-[10px] font-black uppercase tracking-[0.2em] ${color} opacity-90 flex items-center gap-1.5`}>
+              <div className="h-px w-3 bg-current opacity-40" />
+              Focus Grade: {grade}
+            </div>
           </div>
-          <div className="space-y-1 mt-2">
+          <div className="space-y-1 mt-3">
             {[
               { label: "Goal", val: `${Math.min(100, Math.round((focusMinutes / settings.dailyGoalMinutes) * 100))}%` },
               { label: "Sessions", val: `${completedSessions}` },

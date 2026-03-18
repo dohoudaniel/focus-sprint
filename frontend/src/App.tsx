@@ -21,6 +21,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminSessions from "./pages/admin/AdminSessions";
 import AdminHealth from "./pages/admin/AdminHealth";
 import { AuthProvider } from "./hooks/use-auth";
+import { TimerProvider } from "./contexts/TimerContext";
 
 const queryClient = new QueryClient();
 
@@ -31,26 +32,30 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/app" element={<Dashboard />} />
-            <Route path="/chat" element={<AIChat />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/insights" element={<Insights />} />
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/signup" element={<Signup />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminOverview />} />
-              <Route path="users" element={<AdminUsers />} />
-              <Route path="sessions" element={<AdminSessions />} />
-              <Route path="health" element={<AdminHealth />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <AIChatButton />
+          <TimerProvider>
+            <div className="relative">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/app" element={<Dashboard />} />
+                <Route path="/chat" element={<AIChat />} />
+                <Route path="/history" element={<History />} />
+                <Route path="/insights" element={<Insights />} />
+                <Route path="/auth/login" element={<Login />} />
+                <Route path="/auth/signup" element={<Signup />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminOverview />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="sessions" element={<AdminSessions />} />
+                  <Route path="health" element={<AdminHealth />} />
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <AIChatButton />
+            </div>
+          </TimerProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
