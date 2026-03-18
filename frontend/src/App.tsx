@@ -22,6 +22,7 @@ import AdminSessions from "./pages/admin/AdminSessions";
 import AdminHealth from "./pages/admin/AdminHealth";
 import { AuthProvider } from "./hooks/use-auth";
 import { TimerProvider } from "./contexts/TimerContext";
+import HealthMonitor from "./components/HealthMonitor";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <HealthMonitor />
       <BrowserRouter>
         <AuthProvider>
           <TimerProvider>
