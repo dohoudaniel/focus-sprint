@@ -97,7 +97,7 @@ RULES:
 1. Address the user directly as "{user_name}".
 2. Be scientific, data-driven, and "brutally" direct. No generic motivation.
 3. Identify patterns: "Every Wednesday you fail 50%", "Your notes are shorter when you work after 9pm," etc.
-4. Each insight must be 1 sentence.
+4. Each insight must be 1 sentence. Use Markdown (e.g., **bold**) for key metrics or warnings.
 5. Format as a JSON array of objects with keys "type" (one of: "warning", "insight", "win", "action") and "text" (the insight sentence).
 6. Return ONLY valid JSON.
 """
@@ -206,6 +206,7 @@ def burnout_check():
     # AI Recommendation Generation
     system_instruction = """You are a productivity wellness expert. 
 Analyse burnout signals for a worker and provide a direct message and a specific actionable recommendation.
+Use Markdown (e.g. **bold**) for emphasis on critical findings.
 Return ONLY a JSON object:
 {
   "message": "A 1-sentence summary of their current state",
@@ -349,19 +350,19 @@ def daily_plan():
     system_instruction = f"""You are a precision focus coach generating a personalised daily sprint plan for {user_name}.
 Generate a focused, practical sprint plan. Return ONLY valid JSON:
 {{
-  "greeting": "One sharp, personalised greeting sentence addressing {user_name}",
+  "greeting": "One sharp, personalised greeting sentence addressing {user_name}. Use Markdown (e.g., **bold**) for emphasis.",
   "status": "on_track" | "behind" | "great_day" | "rest_recommended",
   "sprints": [
     {{"time": "HH:MM", "duration": 25, "task": "suggested task or focus area", "priority": "high" | "medium" | "low"}}
   ],
-  "tip": "one ultra-specific tip for {user_name} based on their patterns",
+  "tip": "one ultra-specific tip for {user_name} based on their patterns. Use Markdown for emphasis.",
   "daily_word": "one word that captures the focus energy for today"
 }}
 Rules:
 - Max 4 sprints. Only suggest times after {hour:02d}:00.
 - Tasks should reference user's recent notes if possible.
 - If it is late (after 20:00), recommend rest or wind-down only.
-- Return ONLY valid JSON.
+- Return ONLY valid JSON and use clear Markdown formatting in string fields.
 """
 
     user_prompt = f"""CURRENT CONTEXT:

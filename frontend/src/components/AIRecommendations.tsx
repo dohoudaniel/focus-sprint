@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { BookOpen, ExternalLink, Sparkles, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { motion } from "framer-motion";
+import ReactMarkdown from "react-markdown";
 
 interface Recommendation {
   title: string;
@@ -71,9 +72,9 @@ export default function AIRecommendations() {
                 <h4 className="text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
                   {rec.title}
                 </h4>
-                <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">
-                  {rec.description}
-                </p>
+                <div className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                  <ReactMarkdown>{rec.description}</ReactMarkdown>
+                </div>
               </div>
               <div className="p-2 rounded-xl bg-secondary opacity-0 group-hover:opacity-100 transition-opacity">
                 <ExternalLink size={14} className="text-muted-foreground" />

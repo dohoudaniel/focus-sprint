@@ -3,6 +3,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, Clock, TrendingUp, CheckCircle2, Brain } from "lucide-react";
+import ReactMarkdown from "react-markdown";
 
 interface Sprint {
   time: string;
@@ -172,7 +173,11 @@ export default function DailyFocusPlan() {
             )}
 
             {/* Greeting */}
-            <p className="text-sm text-foreground font-semibold leading-snug">{plan.greeting}</p>
+            <div className="text-sm text-foreground font-semibold leading-snug">
+              <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                {plan.greeting}
+              </ReactMarkdown>
+            </div>
 
             {/* Sprint List */}
             {plan.sprints?.length > 0 && (
@@ -199,7 +204,11 @@ export default function DailyFocusPlan() {
             {/* Tip */}
             <div className="bg-muted/40 rounded-xl p-3">
               <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Coach Tip</p>
-              <p className="text-xs text-foreground font-medium leading-relaxed">{plan.tip}</p>
+              <div className="text-xs text-foreground font-medium leading-relaxed">
+                <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                  {plan.tip}
+                </ReactMarkdown>
+              </div>
             </div>
           </motion.div>
         ) : (
