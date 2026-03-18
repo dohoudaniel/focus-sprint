@@ -73,6 +73,7 @@ export default {
         display: ["Iosevka Charon Mono", "monospace"],
         body: ["Iosevka Charon Mono", "monospace"],
         sans: ["Iosevka Charon Mono", "monospace"],
+        mono: ["Iosevka Charon Mono", "monospace"],
       },
       keyframes: {
         "accordion-down": {

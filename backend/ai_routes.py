@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from extensions import db
-from models import Session
+from models import Session, User
 import google.generativeai as genai
 
 ai_bp = Blueprint('ai', __name__, url_prefix='/api/ai')
@@ -40,14 +40,30 @@ def build_session_context(sessions: list) -> str:
     return "\n".join(lines)
 
 
-def call_gemini(prompt: str) -> str:
-    """Call Gemini Flash and return the response text."""
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Rate limiting to prevent brute AI abuse
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+def call_gemini(user_prompt: str, system_instruction: str = "") -> str:
+    """Call Gemini with strict system instruction to prevent prompt injection."""
     try:
-        model = genai.GenerativeModel("gemini-3.1-pro-preview")
-        response = model.generate_content(prompt)
+        # Use system_instruction parameter if available 
+        # (gemini-3.1-pro-preview supports this as a core security feature)
+        model = genai.GenerativeModel(
+            model_name="gemini-3.1-pro-preview",
+            system_instruction=system_instruction
+        )
+        response = model.generate_content(user_prompt)
         return response.text.strip()
     except Exception as e:
-        return f"AI unavailable: {str(e)}"
+        # Raise exception so the calling route can handle its own fallback
+        raise e
 
 
 # ---------------------------------------------------------------------------
@@ -55,41 +71,66 @@ def call_gemini(prompt: str) -> str:
 # ---------------------------------------------------------------------------
 @ai_bp.route('/coach', methods=['GET'])
 @jwt_required()
+@limiter.limit("10 per minute")
 def ai_coach():
     user_id = get_jwt_identity()
+    user = db.session.get(User, user_id)
+    user_name = user.name if user and user.name else "Focus Warrior"
+    
     sessions = get_user_sessions(user_id, limit=60)
     context = build_session_context(sessions)
-    total = len(sessions)
-    completed = len([s for s in sessions if s['status'] == 'completed'])
     
-    prompt = f"""You are a brutally honest, data-driven focus performance coach.
-A user has given you their last {total} focus sprint sessions. Analyse the data and deliver exactly 5 sharp, personalised, actionable insights.
-
-SESSION DATA:
-{context}
+    total = len(sessions)
+    completed = [s for s in sessions if s['status'] == 'completed']
+    completed_count = len(completed)
+    
+    # Calculate more stats for the prompt
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    sessions_today = [s for s in completed if s['date'] == today_str]
+    total_focus_today = sum(s['duration'] for s in sessions_today)
+    avg_session_length = round(sum(s['duration'] for s in completed) / completed_count, 1) if completed_count > 0 else 0
+    
+    system_instruction = f"""You are a high-performance productivity coach. 
+Analyse the user's focus session data and provide exactly 5 data-driven insights.
 
 RULES:
-- Be direct. No fluff. No motivational clichés.
-- Reference specific patterns you see in the data (times, durations, completion rates, note themes).
-- Each insight should be a single sentence that either reveals a truth or prescribes a specific action.
-- Format as a JSON array of objects with keys "type" (one of: "warning", "insight", "win", "action") and "text" (the insight sentence).
-- Return ONLY valid JSON. No markdown, no explanation.
+1. Address the user directly as "{user_name}".
+2. Be scientific, data-driven, and "brutally" direct. No generic motivation.
+3. Identify patterns: "Every Wednesday you fail 50%", "Your notes are shorter when you work after 9pm," etc.
+4. Each insight must be 1 sentence. Use Markdown (e.g., **bold**) for key metrics or warnings.
+5. Format as a JSON array of objects with keys "type" (one of: "warning", "insight", "win", "action") and "text" (the insight sentence).
+6. Return ONLY valid JSON.
+"""
 
-Example format:
-[
-  {{"type": "warning", "text": "Your completion rate drops to 12% after 4pm — stop scheduling deep work in the afternoon."}},
-  {{"type": "win", "text": "Tuesday mornings are your superpower — you complete 94% of sessions before noon."}}
-]"""
+    user_prompt = f"""USER PROFILE & METRICS:
+- Name: {user_name}
+- Total sessions analysed: {total}
+- Overall Completion Rate: {round((completed_count / total * 100) if total > 0 else 0, 1)}%
+- Average Fokus Duration: {avg_session_length} minutes
+- Total focus time today: {total_focus_today} minutes
 
-    raw = call_gemini(prompt)
+SESSION DATA HISTORY (last 60):
+{context}"""
+
+    raw = call_gemini(user_prompt, system_instruction)
     
     try:
-        # Strip any markdown code fences if present
         clean = raw.strip().lstrip('```json').lstrip('```').rstrip('```').strip()
         insights = json.loads(clean)
-        return jsonify({"insights": insights, "session_count": total, "completion_rate": round((completed / total * 100) if total > 0 else 0, 1)})
+        if not isinstance(insights, list):
+            raise ValueError("Expected list")
+        return jsonify({
+            "insights": insights, 
+            "session_count": total, 
+            "completion_rate": round((completed_count / total * 100) if total > 0 else 0, 1),
+            "user_name": user_name
+        })
     except Exception:
-        return jsonify({"insights": [{"type": "insight", "text": raw}], "session_count": total, "completion_rate": 0})
+        return jsonify({
+            "insights": [{"type": "insight", "text": f"Focus harder, {user_name}."}], 
+            "session_count": total, 
+            "completion_rate": 0
+        })
 
 
 # ---------------------------------------------------------------------------
@@ -97,6 +138,7 @@ Example format:
 # ---------------------------------------------------------------------------
 @ai_bp.route('/burnout', methods=['GET'])
 @jwt_required()
+@limiter.limit("5 per minute")
 def burnout_check():
     user_id = get_jwt_identity()
     sessions = get_user_sessions(user_id, limit=30)
@@ -156,16 +198,37 @@ def burnout_check():
     # Classify level
     if score >= 60:
         level = "high"
-        message = "You are showing strong burnout signals. Your output is degrading."
-        rec = "Take 1–2 full rest days. Then restart with one 15-minute sprint, no pressure. Do not aim for peak output this week."
     elif score >= 30:
         level = "moderate"
-        message = "Warning signs present. You're not burned out yet, but you're trending that way."
-        rec = "Reduce session length by 30% for 3 days. Prioritise sleep. One sprint in the morning only."
     else:
         level = "low"
-        message = "No burnout risk detected. Your patterns look sustainable."
-        rec = "Stay consistent. Your current rhythm is working."
+
+    # AI Recommendation Generation
+    system_instruction = """You are a productivity wellness expert. 
+Analyse burnout signals for a worker and provide a direct message and a specific actionable recommendation.
+Use Markdown (e.g. **bold**) for emphasis on critical findings.
+Return ONLY a JSON object:
+{
+  "message": "A 1-sentence summary of their current state",
+  "recommendation": "A 1-2 sentence recovery or optimization plan"
+}"""
+    
+    user_prompt = f"""DATA:
+- Burnout Risk Score: {score}/100
+- Detected Level: {level}
+- Signals: {", ".join(signals) if signals else "No negative signals detected."}"""
+
+    raw = call_gemini(user_prompt, system_instruction)
+    try:
+        clean = raw.strip().lstrip('```json').lstrip('```').rstrip('```').strip()
+        ai_res = json.loads(clean)
+        if not isinstance(ai_res, dict):
+            raise ValueError("Expected object")
+        message = ai_res.get("message", "Stay focused.")
+        rec = ai_res.get("recommendation", "Your patterns look sustainable.")
+    except:
+        message = "Patterns detected. Adjusting pace recommended."
+        rec = "Focus on consistency rather than intensity today."
 
     return jsonify({
         "level": level,
@@ -187,6 +250,7 @@ def burnout_check():
 # ---------------------------------------------------------------------------
 @ai_bp.route('/schedule', methods=['GET'])
 @jwt_required()
+@limiter.limit("10 per minute")
 def optimal_schedule():
     user_id = get_jwt_identity()
     sessions = get_user_sessions(user_id, limit=90)
@@ -260,8 +324,12 @@ def optimal_schedule():
 # ---------------------------------------------------------------------------
 @ai_bp.route('/daily-plan', methods=['GET'])
 @jwt_required()
+@limiter.limit("10 per minute")
 def daily_plan():
     user_id = get_jwt_identity()
+    user = db.session.get(User, user_id)
+    user_name = user.name if user and user.name else "Focus Warrior"
+
     sessions = get_user_sessions(user_id, limit=20)
     
     now = datetime.now()
@@ -279,39 +347,40 @@ def daily_plan():
 
     context = build_session_context(sessions[:10])
     
-    prompt = f"""You are a precision focus coach generating a personalised daily sprint plan.
+    system_instruction = f"""You are a precision focus coach generating a personalised daily sprint plan for {user_name}.
+Generate a focused, practical sprint plan. Return ONLY valid JSON:
+{{
+  "greeting": "One sharp, personalised greeting sentence addressing {user_name}. Use Markdown (e.g., **bold**) for emphasis.",
+  "status": "on_track" | "behind" | "great_day" | "rest_recommended",
+  "sprints": [
+    {{"time": "HH:MM", "duration": 25, "task": "suggested task or focus area", "priority": "high" | "medium" | "low"}}
+  ],
+  "tip": "one ultra-specific tip for {user_name} based on their patterns. Use Markdown for emphasis.",
+  "daily_word": "one word that captures the focus energy for today"
+}}
+Rules:
+- Max 4 sprints. Only suggest times after {hour:02d}:00.
+- Tasks should reference user's recent notes if possible.
+- If it is late (after 20:00), recommend rest or wind-down only.
+- Return ONLY valid JSON and use clear Markdown formatting in string fields.
+"""
 
-CURRENT CONTEXT:
+    user_prompt = f"""CURRENT CONTEXT:
 - Day: {day_name}
 - Current time: {hour:02d}:00
 - Focus time logged today: {focus_today} minutes
 - Recent work notes: {notes_context}
 
-RECENT SESSIONS:
-{context}
+RELEVANT SESSIONS:
+{context}"""
 
-Generate a focused, practical sprint plan for the rest of today. Return ONLY valid JSON (no markdown):
-{{
-  "greeting": "one sharp, personalised greeting sentence",
-  "status": "on_track" | "behind" | "great_day" | "rest_recommended",
-  "sprints": [
-    {{"time": "HH:MM", "duration": 25, "task": "suggested task or focus area", "priority": "high" | "medium" | "low"}}
-  ],
-  "tip": "one ultra-specific tip for this user based on their patterns",
-  "daily_word": "one word that captures the focus energy for today"
-}}
-
-Rules:
-- Max 4 sprints. Only suggest times after {hour:02d}:00.
-- Tasks should reference user's recent notes if possible.
-- If it is late (after 20:00), recommend rest or wind-down only.
-- Be concise and direct."""
-
-    raw = call_gemini(prompt)
+    raw = call_gemini(user_prompt, system_instruction)
     
     try:
         clean = raw.strip().lstrip('```json').lstrip('```').rstrip('```').strip()
         plan = json.loads(clean)
+        if not isinstance(plan, dict):
+            raise ValueError("Expected object")
         plan['focus_today_min'] = focus_today
         plan['sessions_today'] = len(sessions_today)
         return jsonify(plan)
@@ -329,6 +398,7 @@ Rules:
 
 @ai_bp.route('/chat', methods=['POST'])
 @jwt_required()
+@limiter.limit("20 per minute")
 def ai_chat():
     user_id = get_jwt_identity()
     data = request.json or {}
@@ -347,22 +417,53 @@ def ai_chat():
         role = "User" if turn["role"] == "user" else "Coach"
         history_str += f"{role}: {turn['content']}\n"
 
-    system_prompt = f"""You are the FocusSprint AI Productivity Coach. 
+    system_instruction = f"""You are the FocusSprint AI Productivity Coach. 
 Your primary purpose is to help the user master their productivity using FocusSprint.
-
-USER DATA (Last 30 sessions):
-{context}
 
 CORE PRINCIPLES:
 1. ONLY discuss productivity, habits, deep work, and session history.
 2. If the user wanders off-topic (news, code, entertainment), politely and firmly redirect them to focus. 
-3. Use their data (like completed vs failed sessions or session notes) to give specific, "brutal" but helpful feedback.
-4. Keep replies crisp and high-impact.
+3. Use their data to give specific, high-impact feedback.
+4. Keep replies crisp and professional.
+"""
+
+    user_prompt = f"""USER DATA (Last 30 sessions):
+{context}
 
 CHAT HISTORY:
 {history_str}
-User: {message}
-Coach:"""
+User: {message}"""
 
-    reply = call_gemini(system_prompt)
+    reply = call_gemini(user_prompt, system_instruction)
     return jsonify({"reply": reply})
+
+
+@ai_bp.route('/recommendations', methods=['GET'])
+@jwt_required()
+@limiter.limit("5 per minute")
+def ai_recommendations():
+    user_id = get_jwt_identity()
+    sessions = get_user_sessions(user_id, limit=30)
+    context = build_session_context(sessions)
+
+    system_instruction = """Recommend 4 highly relevant articles or topics for the user.
+Return ONLY a JSON list of objects:
+[{"title": "Title", "description": "Desc", "topic": "Category", "url": "HTTPS URL"}]
+Rules:
+- Return ONLY valid JSON.
+"""
+    user_prompt = f"USER PERFORMANCE DATA:\n{context}"
+
+    raw = call_gemini(user_prompt, system_instruction)
+    try:
+        clean = raw.strip().lstrip('```json').lstrip('```').rstrip('```').strip()
+        recommendations = json.loads(clean)
+        if not isinstance(recommendations, list):
+            raise ValueError("AI should return a JSON list of objects.")
+        return jsonify(recommendations)
+    except Exception:
+        return jsonify([
+            { "title": "The Art of Deep Work", "description": "James Clear's guide to mastering focus.", "topic": "Focus", "url": "https://jamesclear.com/deep-work" },
+            { "title": "Atomic Habits", "description": "How to build systems that last.", "topic": "Habits", "url": "https://jamesclear.com/atomic-habits" },
+            { "title": "Getting Things Done", "description": "The science of stress-free productivity.", "topic": "Mindset", "url": "https://gettingthingsdone.com/what-is-gtd/" }
+        ])

@@ -8,6 +8,7 @@ import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/use-auth";
 import { Navigate, Link } from "react-router-dom";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
   role: "user" | "bot";
@@ -145,7 +146,9 @@ export default function AIChatPage() {
                         ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20 rounded-tr-none"
                         : "bg-muted/40 border border-border/40 text-foreground rounded-tl-none prose prose-invert prose-sm max-w-none"
                     }`}>
-                      {msg.content}
+                      <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                   </div>
                 </motion.div>

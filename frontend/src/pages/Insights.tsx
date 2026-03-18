@@ -9,6 +9,7 @@ import { Navigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import ReactMarkdown from "react-markdown";
 
 // --- Type Definitions ---
 interface CoachInsight {
@@ -191,7 +192,11 @@ export default function InsightsPage() {
                           className={`flex gap-3 p-4 rounded-2xl border ${meta.bg}`}
                         >
                           <Icon size={16} className={`${meta.color} shrink-0 mt-0.5`} />
-                          <p className="text-sm font-medium text-foreground leading-relaxed">{insight.text}</p>
+                          <div className="text-sm font-medium text-foreground leading-relaxed prose-sm">
+                            <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                              {insight.text}
+                            </ReactMarkdown>
+                          </div>
                         </motion.div>
                       );
                     })}
@@ -247,7 +252,11 @@ export default function InsightsPage() {
                       <div className={`text-xs font-black uppercase tracking-widest ${burnoutCfg.color} mb-1`}>
                         {burnoutCfg.label}
                       </div>
-                      <p className="text-sm font-semibold text-foreground leading-snug">{burnout.message}</p>
+                      <div className="text-sm font-semibold text-foreground leading-snug">
+                        <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                          {burnout.message}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
 
@@ -266,7 +275,11 @@ export default function InsightsPage() {
                   {/* Recommendation */}
                   <div className="p-4 rounded-2xl border border-primary/20 bg-primary/5 space-y-1">
                     <p className="text-[10px] font-black uppercase tracking-widest text-primary">Coach Recommendation</p>
-                    <p className="text-sm text-foreground font-medium leading-relaxed">{burnout.recommendation}</p>
+                    <div className="text-sm text-foreground font-medium leading-relaxed">
+                      <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
+                        {burnout.recommendation}
+                      </ReactMarkdown>
+                    </div>
                   </div>
 
                   {/* Metrics row */}

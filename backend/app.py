@@ -29,7 +29,8 @@ def create_app():
     jwt.init_app(app)
     
     # CORS setup
-    CORS(app, resources={r"/*": {"origins": os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')}})
+    origins = [o.strip().rstrip('/') for o in os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')]
+    CORS(app, resources={r"/*": {"origins": origins}})
 
     # Register Blueprints
     app.register_blueprint(ai_bp)
@@ -99,9 +100,17 @@ def create_app():
         if not data or 'duration' not in data:
             return jsonify({"msg": "Missing session data"}), 400
 
+        # Validate duration
+        try:
+            duration = int(data['duration'])
+            if duration <= 0 or duration > 1440:
+                return jsonify({"msg": "Invalid duration. Must be 1-1440 minutes."}), 400
+        except (ValueError, TypeError):
+            return jsonify({"msg": "Duration must be an integer."}), 400
+
         new_session = Session(
             user_id=user_id,
-            duration=data['duration'],
+            duration=duration,
             start_time=data['startTime'],
             end_time=data['endTime'],
             date=data['date'],
