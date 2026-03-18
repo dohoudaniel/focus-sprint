@@ -11,7 +11,7 @@ from extensions import db, migrate, jwt
 load_dotenv()
 
 # Import models to ensure they are registered with SQLAlchemy
-from models import User, Session
+from models import User, Session, ChatMessage
 from ai_routes import ai_bp
 
 def create_app():
@@ -145,4 +145,5 @@ app = create_app()
 
 if __name__ == '__main__':
     port = int(os.getenv('PORT', 5000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.getenv('DEBUG', 'False').lower() == 'true'
+    app.run(host='0.0.0.0', port=port, debug=debug_mode)

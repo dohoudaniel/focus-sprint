@@ -72,7 +72,7 @@ export default function AIRecommendations() {
                 <h4 className="text-sm font-bold text-foreground leading-snug group-hover:text-primary transition-colors">
                   {rec.title}
                 </h4>
-                <div className="text-[11px] text-muted-foreground leading-relaxed font-medium">
+                <div className="text-[11px] text-muted-foreground leading-relaxed font-medium break-words">
                   <ReactMarkdown>{rec.description}</ReactMarkdown>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 from app import create_app
 from extensions import db
-from models import User, Session
+from models import User, Session, ChatMessage
 
 app = create_app()
 

@@ -155,7 +155,7 @@ export default function DailyFocusPlan() {
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                className="text-3xl font-black text-primary tracking-tight"
+                className="text-2xl sm:text-3xl font-black text-primary tracking-tight break-words"
               >
                 {plan.daily_word}
               </motion.p>
@@ -173,7 +173,7 @@ export default function DailyFocusPlan() {
             )}
 
             {/* Greeting */}
-            <div className="text-sm text-foreground font-semibold leading-snug">
+            <div className="text-sm text-foreground font-semibold leading-snug break-words">
               <ReactMarkdown components={{ p: ({node, ...props}) => <span {...props} /> }}>
                 {plan.greeting}
               </ReactMarkdown>

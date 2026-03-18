@@ -72,7 +72,7 @@ export default function DashboardPage() {
         <div className="grid gap-10 lg:grid-cols-[1fr_320px]">
 
           {/* ── Main Column: Timer + AI Daily Plan ── */}
-          <div className="space-y-8">
+          <div className="space-y-8 min-w-0">
             {/* Header Greeting */}
             <motion.div
               initial={{ opacity: 0, x: -10 }}
@@ -150,7 +150,7 @@ export default function DashboardPage() {
           </div>
 
           {/* ── Sidebar ── */}
-          <aside className="space-y-4">
+          <aside className="space-y-4 min-w-0">
 
             {/* AI Recommendations */}
             <AIRecommendations />

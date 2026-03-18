@@ -24,19 +24,28 @@ const QUICK_PROMPTS = [
 
 export default function AIChatPage() {
   const { isAuthenticated, isLoading: authLoading, user } = useAuth();
-  const [messages, setMessages] = useState<Message[]>(() => {
-    const saved = localStorage.getItem("focussprint_chat");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Initial fetch of history
+    const fetchHistory = async () => {
+      try {
+        const history = await apiFetch("/api/ai/chat/history");
+        setMessages(history);
+      } catch (err) {
+        console.error("Failed to fetch chat history", err);
+      }
+    };
+    fetchHistory();
+  }, []);
+
+  useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-    localStorage.setItem("focussprint_chat", JSON.stringify(messages));
   }, [messages]);
 
   if (authLoading) return null;
@@ -55,6 +64,10 @@ export default function AIChatPage() {
         method: "POST",
         body: JSON.stringify({
           message: text,
+          // History is now managed by the backend, but we can still send recent messages if needed
+          // The backend currently builds its own context from DB, but sending history helps with statelessness if preferred.
+          // However, since we now store it, the backend can just query it.
+          // Let's keep sending history for consistency with the existing backend logic which expects 'history'
           history: messages,
         }),
       });
@@ -67,10 +80,14 @@ export default function AIChatPage() {
     }
   };
 
-  const clearChat = () => {
-    setMessages([]);
-    localStorage.removeItem("focussprint_chat");
-    toast.info("Conversation cleared.");
+  const clearChat = async () => {
+    try {
+      await apiFetch("/api/ai/chat", { method: "DELETE" });
+      setMessages([]);
+      toast.info("Conversation cleared.");
+    } catch (err) {
+      toast.error("Failed to clear history");
+    }
   };
 
   return (
