@@ -29,7 +29,7 @@ def create_app():
     jwt.init_app(app)
     
     # CORS setup
-    CORS(app, resources={r"/*": {"origins": os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')}})
+    CORS(app, resources={r"/*": {"origins": os.getenv('FRONTEND_URL', 'http://localhost:5173').split(',')}})
 
     # Register Blueprints
     app.register_blueprint(ai_bp)
