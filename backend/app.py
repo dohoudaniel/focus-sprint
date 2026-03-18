@@ -1,20 +1,16 @@
 import os
+import re
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
-from flask_migrate import Migrate
-from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity, unset_jwt_cookies
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
 from dotenv import load_dotenv
 from datetime import timedelta
+from extensions import db, migrate, jwt
 
 # Load environment variables
 load_dotenv()
 
-db = SQLAlchemy()
-migrate = Migrate()
-jwt = JWTManager()
-
-# Import models
+# Import models to ensure they are registered with SQLAlchemy
 from models import User, Session
 
 def create_app():
@@ -39,17 +35,37 @@ def create_app():
     def register():
         data = request.get_json()
         if not data or not data.get('email') or not data.get('password'):
-            return jsonify({"msg": "Missing email or password"}), 400
+            return jsonify({"msg": "Email and password are required"}), 400
         
-        if User.query.filter_by(email=data['email']).first():
-            return jsonify({"msg": "User already exists"}), 400
+        email = data['email']
+        password = data['password']
+        name = data.get('name')
+
+        # Email validation
+        email_regex = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        if not re.match(email_regex, email):
+            return jsonify({"msg": "Invalid email format"}), 400
+
+        # Password strength validation
+        # Minimum 8 characters, at least one uppercase, one lowercase, and one number
+        if len(password) < 8:
+            return jsonify({"msg": "Password must be at least 8 characters long"}), 400
+        if not any(char.isupper() for char in password):
+            return jsonify({"msg": "Password must contain at least one uppercase letter"}), 400
+        if not any(char.islower() for char in password):
+            return jsonify({"msg": "Password must contain at least one lowercase letter"}), 400
+        if not any(char.isdigit() for char in password):
+            return jsonify({"msg": "Password must contain at least one digit"}), 400
         
-        user = User(email=data['email'], name=data.get('name'))
-        user.set_password(data['password'])
+        if User.query.filter_by(email=email).first():
+            return jsonify({"msg": "An account with this email already exists"}), 400
+        
+        user = User(email=email, name=name)
+        user.set_password(password)
         db.session.add(user)
         db.session.commit()
         
-        return jsonify({"msg": "User created successfully"}), 201
+        return jsonify({"msg": "Account created successfully"}), 201
 
     @app.route('/api/auth/login', methods=['POST'])
     def login():
@@ -76,6 +92,9 @@ def create_app():
         user_id = get_jwt_identity()
         data = request.get_json()
         
+        if not data or 'duration' not in data:
+            return jsonify({"msg": "Missing session data"}), 400
+
         new_session = Session(
             user_id=user_id,
             duration=data['duration'],
