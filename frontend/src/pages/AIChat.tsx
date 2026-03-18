@@ -27,6 +27,7 @@ export default function AIChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -37,6 +38,8 @@ export default function AIChatPage() {
         setMessages(history);
       } catch (err) {
         console.error("Failed to fetch chat history", err);
+      } finally {
+        setIsLoadingHistory(false);
       }
     };
     fetchHistory();
@@ -64,10 +67,6 @@ export default function AIChatPage() {
         method: "POST",
         body: JSON.stringify({
           message: text,
-          // History is now managed by the backend, but we can still send recent messages if needed
-          // The backend currently builds its own context from DB, but sending history helps with statelessness if preferred.
-          // However, since we now store it, the backend can just query it.
-          // Let's keep sending history for consistency with the existing backend logic which expects 'history'
           history: messages,
         }),
       });
@@ -116,7 +115,21 @@ export default function AIChatPage() {
         {/* Chat Area */}
         <div className="flex-1 overflow-hidden relative border border-border/40 rounded-3xl bg-card/60 backdrop-blur-md shadow-2xl flex flex-col">
           <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth custom-scrollbar">
-            {messages.length === 0 && (
+            {isLoadingHistory ? (
+              <div className="space-y-6 py-4">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className={`flex ${i % 2 === 0 ? 'justify-end' : 'justify-start'} gap-3`}>
+                    <div className={`flex gap-3 max-w-[70%] ${i % 2 === 0 ? 'flex-row-reverse' : 'flex-row'}`}>
+                      <div className="h-8 w-8 rounded-lg bg-muted/40 animate-pulse shrink-0" />
+                      <div className="space-y-2">
+                        <div className={`h-12 w-[240px] rounded-2xl bg-muted/20 animate-pulse ${i % 2 === 0 ? 'rounded-tr-none' : 'rounded-tl-none'}`} />
+                        <div className={`h-4 w-[160px] rounded-full bg-muted/10 animate-pulse ${i % 2 === 0 ? 'ml-auto' : ''}`} />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-6">
                 <div className="h-16 w-16 rounded-3xl bg-primary/10 border border-primary/20 flex items-center justify-center ring-4 ring-primary/5">
                   <Bot size={32} className="text-primary" />
@@ -142,7 +155,7 @@ export default function AIChatPage() {
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
             <AnimatePresence initial={false}>
               {messages.map((msg, i) => (
