@@ -70,8 +70,9 @@ export default {
         "card-hover": "var(--shadow-hover)",
       },
       fontFamily: {
-        display: ["Poppins", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        display: ["Iosevka Charon Mono", "monospace"],
+        body: ["Iosevka Charon Mono", "monospace"],
+        sans: ["Iosevka Charon Mono", "monospace"],
       },
       keyframes: {
         "accordion-down": {

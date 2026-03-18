@@ -41,10 +41,8 @@ export default function Navbar() {
     >
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-button bg-primary">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="text-primary-foreground">
-              <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor" />
-            </svg>
+          <div className="flex h-9 w-9 items-center justify-center rounded-button bg-primary overflow-hidden">
+            <img src="/logo.png" alt="FocusSprint" className="h-full w-full object-cover" />
           </div>
           <span className="font-display text-xl font-bold text-foreground">FocusSprint</span>
         </Link>
