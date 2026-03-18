@@ -12,6 +12,7 @@ load_dotenv()
 
 # Import models to ensure they are registered with SQLAlchemy
 from models import User, Session
+from ai_routes import ai_bp
 
 def create_app():
     app = Flask(__name__)
@@ -29,6 +30,9 @@ def create_app():
     
     # CORS setup
     CORS(app, resources={r"/*": {"origins": os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')}})
+
+    # Register Blueprints
+    app.register_blueprint(ai_bp)
 
     # Auth Routes
     @app.route('/api/auth/register', methods=['POST'])

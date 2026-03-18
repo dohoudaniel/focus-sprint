@@ -12,6 +12,9 @@ import Signup from "./pages/Signup";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
+import AIChat from "./pages/AIChat";
+import AIChatButton from "./components/AIChatButton";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -31,12 +34,14 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/app" element={<Dashboard />} />
+            <Route path="/chat" element={<AIChat />} />
             <Route path="/history" element={<History />} />
             <Route path="/insights" element={<Insights />} />
             <Route path="/auth/login" element={<Login />} />
             <Route path="/auth/signup" element={<Signup />} />
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="/admin" element={<AdminLayout />}>
               <Route index element={<AdminOverview />} />
               <Route path="users" element={<AdminUsers />} />
@@ -45,6 +50,7 @@ const App = () => (
             </Route>
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <AIChatButton />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

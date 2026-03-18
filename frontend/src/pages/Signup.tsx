@@ -149,7 +149,7 @@ export default function SignupPage() {
                 type="text" 
                 value={name} 
                 onChange={(e) => setName(e.target.value)} 
-                placeholder="Daniel Favour" 
+                placeholder="Your Full Name" 
                 className="rounded-xl h-12 bg-white/5 border-border/60 transition-all focus:ring-primary/20" 
                 disabled={isSubmitting} 
               />
@@ -161,7 +161,7 @@ export default function SignupPage() {
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                placeholder="daniel@focussprint.com" 
+                placeholder="Your email address" 
                 className={`rounded-xl h-12 bg-white/5 border-border/60 transition-all focus:ring-primary/20 ${!isEmailValid ? "border-destructive ring-destructive/10" : ""}`} 
                 required 
                 disabled={isSubmitting} 
