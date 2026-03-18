@@ -5,7 +5,8 @@ A robust Flask API designed to power real-time productivity analysis and AI coac
 ## 🚀 Key Features
 
 - **AI-Driven Analytics**: Integrates with Google Gemini for coaching, daily planning, and burnout detection.
-- **Data Persistence**: Uses PostgreSQL (managed by Supabase) or local SQLite with SQLAlchemy.
+- **Persistent AI Chat**: Full database-backed chat history (ChatMessage model) with cross-device sync.
+- **Long-term AI Memory**: Context-aware coaching that retrieves and analyzes previous user interactions for personalized advice.
 - **JWT Authorization**: Secure, role-based access for all user sessions and data.
 - **Dynamic Scoring**: On-the-fly burnout risk scores and focus grade calculation.
 
@@ -31,6 +32,8 @@ The backend is built with hardened security measures to ensure stable and safe A
 | `/api/auth/register` | POST | User registration with password validation |
 | `/api/auth/login` | POST | Login and JWT token issuance |
 | `/api/sessions` | GET/POST | Fetch or log user focus sessions |
+| `/api/ai/chat` | POST/DELETE | Real-time chat with the AI Coach (stores to DB) |
+| `/api/ai/chat/history` | GET | Retrieve full synchronized chat history |
 | `/api/ai/coach` | GET | Scientific insights based on last 60 sessions |
 | `/api/ai/burnout` | GET | Burnout risk analysis and recovery advice |
 | `/api/ai/daily-plan` | GET | Personalised focus schedule for the day |
@@ -44,7 +47,8 @@ The backend is built with hardened security measures to ensure stable and safe A
    - `FRONTEND_URL`: The URL of your React frontend for CORS security
    - `SUPABASE_URL`: Your PostgreSQL connection string
    - `JWT_SECRET_KEY`: A complex secret key for signing tokens
-3. **Run Database Migrations**: `flask db upgrade`
+   - `DEBUG`: Set to `True` for development, `False` for production.
+3. **Run Database Migrations**: `flask db upgrade` (or run `python3 init_db.py` for fresh setup)
 4. **Start the server**: `python3 app.py`
 
 Recommended: Use a virtual environment (`python -m venv venv`) before installing dependencies.

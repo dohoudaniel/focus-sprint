@@ -5,11 +5,13 @@ A high-performance deep work and productivity ecosystem designed for the Remote 
 ## ✨ Key Features
 
 - **AI Productivity Coach**: Personalised, "brutally" direct feedback based on real session data using Google Gemini.
+- **Persistent AI Chat**: Cross-device synchronized coaching history stored in the database (not just local storage).
+- **Long-term Memory**: The AI Coach remembers your previous conversations to provide deeper, evolving productivity advice.
 - **Dynamic Daily Sprint Plan**: AI-generated schedules that adapt to your morning/evening energy and recent work notes.
 - **Precision Focus Timer**: A customisable timer with a "Zen Bowl" harmonic chime to transition out of deep work gracefully.
 - **Burnout Detector**: Scientific analysis of your focus patterns to identify fatigue before it becomes a problem.
-- **Performance Analytics**: Real-time focus scores, completion rates, and historical session logs.
-- **Secure by Design**: Integrated rate limiting and prompt injection protection for all AI features.
+- **Premium UX**: Integrated animated skeletons, shimmer effects, and full mobile responsiveness for a high-end feel.
+- **Secure by Design**: Integrated rate limiting, JWT authentication, and prompt injection protection.
 
 ## 🛠️ Technology Stack
 
