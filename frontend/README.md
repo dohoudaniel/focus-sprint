@@ -6,12 +6,10 @@ A high-performance React application designed for peak productivity and deep wor
 
 - **Interactive Deep Work Timer**: A precision-engineered timer with custom presets (25m, 50m, 90m) and manual duration control.
 - **Harmonious Audio Engineering**: Features a custom "Zen Bowl" chime that leverages layered harmonics to notify you of session completion without breaking your mental flow.
-- **AI-Powered Dashboard**: Integrated with real-time backend analytics to provide:
-  - **Dynamic Daily Focus Plan**: AI-suggested sprints based on your current time and work notes.
-  - **AI Coach Insights**: Scientific feedback on your focus patterns.
-  - **Article Recommendations**: Personalized reading list to optimize your habits.
-- **Performance Grading**: Real-time Focus Score and Grade based on consistency and deep work volume.
-- **Modern UI Architecture**: Built with a sleek dark-mode aesthetic, utilizing Framer Motion for micro-interactions and Shadcn UI for accessible, premium components.
+- **AI Coach Chat**: A full-featured chat interface with persistent history synced across all devices.
+- **Premium UX Transitions**: Integrated animated skeletons, shimmer effects, and framer-motion micro-interactions for a polished feel.
+- **Mobile-First Dashboard**: Fully responsive layout optimized for all screen sizes, including broken-word and overflow protection for AI-generated content.
+- **Modern UI Architecture**: Built with a sleek dark-mode aesthetic, utilizing Lucide Icons and Shadcn UI for accessible, premium components.
 
 ## 🛠️ Technology Stack
 
@@ -34,6 +32,7 @@ A high-performance React application designed for peak productivity and deep wor
 |---|---|
 | `TimerCard` | The core focus engine with interactive controls and Zen sound. |
 | `DailyFocusPlan` | Displays AI-generated schedules and greetings. |
+| `AIChat` | Persistent, database-backed AI coaching interface with shimmer loading. |
 | `FocusScore` | Real-time grading and consistency analytics. |
 | `AIRecommendations` | Personalized article suggestions. |
 
