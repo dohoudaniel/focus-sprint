@@ -99,9 +99,17 @@ def create_app():
         if not data or 'duration' not in data:
             return jsonify({"msg": "Missing session data"}), 400
 
+        # Validate duration
+        try:
+            duration = int(data['duration'])
+            if duration <= 0 or duration > 1440:
+                return jsonify({"msg": "Invalid duration. Must be 1-1440 minutes."}), 400
+        except (ValueError, TypeError):
+            return jsonify({"msg": "Duration must be an integer."}), 400
+
         new_session = Session(
             user_id=user_id,
-            duration=data['duration'],
+            duration=duration,
             start_time=data['startTime'],
             end_time=data['endTime'],
             date=data['date'],
