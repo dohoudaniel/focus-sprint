@@ -13,7 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 
 export default function DashboardPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
 
   const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
     queryKey: ["sessions"],
@@ -23,6 +23,13 @@ export default function DashboardPage() {
 
   if (authLoading) return null;
   if (!isAuthenticated) return <Navigate to="/auth/login" />;
+
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+  };
 
   const today = new Date().toISOString().split("T")[0];
   const completedSessions = sessions.filter((s: any) => s.status === "completed");
@@ -65,6 +72,20 @@ export default function DashboardPage() {
 
           {/* ── Main Column: Timer + AI Daily Plan ── */}
           <div className="space-y-8">
+            {/* Header Greeting */}
+            <motion.div
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="px-1"
+            >
+              <h1 className="text-3xl font-black tracking-tight text-foreground">
+                {getGreeting()}, {user?.name?.split(' ')[0] || 'Warrior'}
+              </h1>
+              <p className="text-muted-foreground font-medium mt-1">
+                Let's make some progress on your goals today.
+              </p>
+            </motion.div>
+
             {/* Timer */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}

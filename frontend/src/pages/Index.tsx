@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link, Navigate } from "react-router-dom";
-import { ArrowRight, Zap, Target, BarChart, Clock, ShieldCheck, ChevronRight, Play, Sparkles } from "lucide-react";
+import { ArrowRight, Zap, Target, BarChart, Clock, ShieldCheck, ChevronRight, Play, Sparkles, Brain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/use-auth";
 import Navbar from "@/components/Navbar";
@@ -111,7 +111,7 @@ export default function IndexPage() {
                 </h1>
 
                 <p className="text-base leading-relaxed text-muted-foreground font-medium max-w-lg lg:max-w-md">
-                   Simple, intentional, and private. A minimalist workspace designed to help you reclaim your concentration.
+                   Simple, intentional, and privacy-focused. Reclaim your concentration with high-performance coaching and insights powered by Gemini 3.1 Pro.
                 </p>
 
                 <div className="flex flex-col items-center lg:items-start gap-3 sm:flex-row">
@@ -167,9 +167,9 @@ export default function IndexPage() {
                 delay={0.1}
               />
               <FeatureCard
-                icon={BarChart}
-                title="Performance"
-                desc="Visual data that tracks your peak focus hours without the fluff."
+                icon={Brain}
+                title="AI Coaching"
+                desc="Deep analytics and predictive momentum tracking powered by Gemini to pinpoint your peak focus."
                 image="/analytics.png"
                 delay={0.2}
               />
