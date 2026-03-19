@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FocusSprint — Project Summary</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+        :root {
+            --primary: #f97316;
+            --bg: #0a0f1a;
+            --card: #111827;
+            --border: #1e293b;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent-green: #34d399;
+            --accent-blue: #60a5fa;
+            --accent-amber: #fbbf24;
+        }
+
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            width: 210mm;
+            min-height: 297mm;
+            margin: 0 auto;
+            padding: 10mm 14mm 8mm 14mm;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+
+        /* ── Header ── */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+        }
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #fff;
+        }
+        .header-left h1 span { color: var(--primary); }
+        .header-left p {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 3px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+        .header-right {
+            text-align: right;
+            font-size: 9px;
+            color: var(--muted);
+            line-height: 1.7;
+        }
+        .header-right strong { color: var(--text); font-weight: 700; }
+
+        /* ── Section titles ── */
+        .section-title {
+            font-size: 10px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--primary);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-title::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ── Problem & Solution ── */
+        .problem-solution {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .ps-card {
+            padding: 9px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+        }
+        .ps-card h3 {
+            font-size: 11px;
+            font-weight: 800;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .ps-card.problem h3 { color: #f87171; }
+        .ps-card.solution h3 { color: var(--accent-green); }
+        .ps-card ul {
+            list-style: none;
+            font-size: 9px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        .ps-card ul li::before {
+            content: '→';
+            margin-right: 5px;
+            font-weight: 700;
+        }
+        .ps-card.problem ul li::before { color: #f87171; }
+        .ps-card.solution ul li::before { color: var(--accent-green); }
+
+        /* ── Features Grid ── */
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .feature-card {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+        }
+        .feature-card h4 {
+            font-size: 10px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .feature-card p {
+            font-size: 8px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+        .dot-primary { background: var(--primary); }
+        .dot-green { background: var(--accent-green); }
+        .dot-blue { background: var(--accent-blue); }
+        .dot-amber { background: var(--accent-amber); }
+
+        /* ── Tech Stack ── */
+        .tech-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .tech-col {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            background: var(--card);
+        }
+        .tech-col h4 {
+            font-size: 10px;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+        .tech-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 9px;
+            padding: 2px 0;
+        }
+        .tech-row .label {
+            color: var(--muted);
+            font-weight: 600;
+        }
+        .tech-row .value {
+            color: var(--text);
+            font-weight: 700;
+            text-align: right;
+        }
+        .tech-badge {
+            display: inline-block;
+            background: var(--primary);
+            color: #fff;
+            font-size: 7.5px;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ── Architecture ── */
+        .arch-strip {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            margin-bottom: 10px;
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .arch-strip .arrow {
+            color: var(--primary);
+            font-weight: 900;
+            font-size: 12px;
+        }
+        .arch-strip .node {
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: rgba(249, 115, 22, 0.08);
+            font-size: 8.5px;
+            text-align: center;
+        }
+        .arch-strip .node strong { display: block; color: #fff; font-size: 9px; }
+        .arch-strip .node span { color: var(--muted); font-size: 7.5px; }
+
+        /* ── API Table ── */
+        .api-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 8px;
+            margin-bottom: 8px;
+        }
+        .api-table th {
+            text-align: left;
+            padding: 5px 8px;
+            background: var(--card);
+            color: var(--primary);
+            font-weight: 800;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+        }
+        .api-table td {
+            padding: 3px 8px;
+            border-bottom: 1px solid rgba(30, 41, 59, 0.5);
+            color: var(--muted);
+        }
+        .api-table td:first-child {
+            font-family: 'Courier New', monospace;
+            font-weight: 700;
+            color: var(--text);
+            font-size: 8px;
+        }
+        .method-badge {
+            display: inline-block;
+            font-size: 7px;
+            font-weight: 800;
+            padding: 1px 5px;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+        .method-get { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+        .method-post { background: rgba(96, 165, 250, 0.15); color: var(--accent-blue); }
+        .method-delete { background: rgba(248, 113, 113, 0.15); color: #f87171; }
+
+        /* ── Security ── */
+        .security-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        .sec-badge {
+            text-align: center;
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--card);
+        }
+        .sec-badge strong {
+            display: block;
+            font-size: 9px;
+            color: #fff;
+            margin-bottom: 2px;
+        }
+        .sec-badge span {
+            font-size: 7.5px;
+            color: var(--muted);
+        }
+
+        /* ── Footer ── */
+        .footer {
+            margin-top: 6px;
+            padding-top: 6px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            font-size: 8px;
+            color: var(--muted);
+        }
+        .footer strong { color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <div class="header">
+        <div class="header-left">
+            <h1>Focus<span>Sprint</span></h1>
+            <p>AI-Powered Deep Work Ecosystem</p>
+        </div>
+        <div class="header-right">
+            <strong>Remote Hustle Program — Stage 1</strong><br>
+            Full-Stack Web Application<br>
+            March 2026
+        </div>
+    </div>
+
+    <!-- Problem & Solution -->
+    <div class="problem-solution">
+        <div class="ps-card problem">
+            <h3>⚠ The Problem</h3>
+            <ul>
+                <li>Remote workers lose ~2.5 hrs/day to context switching and unfocused work</li>
+                <li>No real-time, data-driven feedback on personal productivity patterns</li>
+                <li>Burnout goes undetected until it causes multi-day productivity crashes</li>
+                <li>Generic productivity tools offer one-size-fits-all advice, ignoring individual rhythms</li>
+            </ul>
+        </div>
+        <div class="ps-card solution">
+            <h3>✓ The Solution</h3>
+            <ul>
+                <li>Precision focus timer with structured sprint methodology (25/50/90m presets)</li>
+                <li>AI coaching powered by Google Gemini that analyses real session data, not generic tips</li>
+                <li>Automated burnout detection using duration-drop, gap-analysis, and note-length signals</li>
+                <li>Cross-device persistent chat so the AI "grows" with the user over time</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Key Features -->
+    <div class="section-title">Core Features</div>
+    <div class="features-grid">
+        <div class="feature-card">
+            <h4><span class="dot dot-primary"></span> AI Focus Coach</h4>
+            <p>5 data-driven insights from 60+ sessions. Identifies patterns like "Your Wednesday fail rate is 50%."</p>
+        </div>
+        <div class="feature-card">
+            <h4><span class="dot dot-green"></span> Persistent AI Chat</h4>
+            <p>Database-backed coaching history with long-term memory. Syncs across all login devices seamlessly.</p>
+        </div>
+        <div class="feature-card">
+            <h4><span class="dot dot-blue"></span> Burnout Detector</h4>
+            <p>Scores risk 0–100 using fatigue signals: session-length drops, avoidance gaps, and note disengagement.</p>
+        </div>
+        <div class="feature-card">
+            <h4><span class="dot dot-amber"></span> Dynamic Daily Plan</h4>
+            <p>AI generates time-aware sprint schedules referencing your recent notes and energy patterns.</p>
+        </div>
+        <div class="feature-card">
+            <h4><span class="dot dot-primary"></span> Zen Bowl Timer</h4>
+            <p>Web Audio API synthesis with layered harmonics (A4, E5, A5, E6) for graceful session-end transitions.</p>
+        </div>
+        <div class="feature-card">
+            <h4><span class="dot dot-green"></span> Premium UX</h4>
+            <p>Animated shimmer skeletons, Framer Motion micro-interactions, dark mode, and mobile-first responsiveness.</p>
+        </div>
+    </div>
+
+    <!-- Architecture Strip -->
+    <div class="section-title">System Architecture</div>
+    <div class="arch-strip">
+        <div class="node"><strong>React 18 + TS</strong><span>Vite · SPA</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>REST API</strong><span>JWT Auth · CORS</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>Flask</strong><span>Python Backend</span></div>
+        <span class="arrow">→</span>
+        <div class="node"><strong>PostgreSQL</strong><span>Supabase</span></div>
+        <span class="arrow">↔</span>
+        <div class="node"><strong>Gemini 3.1 Pro</strong><span>AI Engine</span></div>
+    </div>
+
+    <!-- Tech Stack -->
+    <div class="section-title">Technology Stack</div>
+    <div class="tech-section">
+        <div class="tech-col">
+            <h4>⚛️ Frontend</h4>
+            <div class="tech-row"><span class="label">Framework</span><span class="value">React 18 + TypeScript</span></div>
+            <div class="tech-row"><span class="label">Build Tool</span><span class="value">Vite 5</span></div>
+            <div class="tech-row"><span class="label">Styling</span><span class="value">Tailwind CSS 3 + Shadcn UI</span></div>
+            <div class="tech-row"><span class="label">Data Fetching</span><span class="value">TanStack Query v5</span></div>
+            <div class="tech-row"><span class="label">Animations</span><span class="value">Framer Motion 12</span></div>
+            <div class="tech-row"><span class="label">Icons</span><span class="value">Lucide React</span></div>
+            <div class="tech-row"><span class="label">Routing</span><span class="value">React Router v6</span></div>
+            <div class="tech-row"><span class="label">Audio</span><span class="value">Web Audio API (Zen Bowl)</span></div>
+        </div>
+        <div class="tech-col">
+            <h4>🐍 Backend</h4>
+            <div class="tech-row"><span class="label">Framework</span><span class="value">Flask (Python)</span></div>
+            <div class="tech-row"><span class="label">Database</span><span class="value">PostgreSQL via Supabase</span></div>
+            <div class="tech-row"><span class="label">ORM</span><span class="value">Flask-SQLAlchemy + Migrate</span></div>
+            <div class="tech-row"><span class="label">AI Engine</span><span class="value">Google Gemini 3.1 Pro</span></div>
+            <div class="tech-row"><span class="label">Auth</span><span class="value">Flask-JWT-Extended (24hr)</span></div>
+            <div class="tech-row"><span class="label">Rate Limiting</span><span class="value">Flask-Limiter (in-memory)</span></div>
+            <div class="tech-row"><span class="label">CORS</span><span class="value">Flask-CORS (whitelist)</span></div>
+            <div class="tech-row"><span class="label">Server</span><span class="value">Gunicorn (Production)</span></div>
+        </div>
+    </div>
+
+    <!-- API Endpoints -->
+    <div class="section-title">API Endpoints (10 Routes)</div>
+    <table class="api-table">
+        <thead>
+            <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+            <tr><td>/api/auth/register</td><td><span class="method-badge method-post">POST</span></td><td>User registration with email regex + password strength validation</td></tr>
+            <tr><td>/api/auth/login</td><td><span class="method-badge method-post">POST</span></td><td>JWT token issuance (24-hour expiry)</td></tr>
+            <tr><td>/api/sessions</td><td><span class="method-badge method-get">GET</span> <span class="method-badge method-post">POST</span></td><td>CRUD for focus sessions (duration, notes, status)</td></tr>
+            <tr><td>/api/ai/coach</td><td><span class="method-badge method-get">GET</span></td><td>5 data-driven insights from last 60 sessions</td></tr>
+            <tr><td>/api/ai/burnout</td><td><span class="method-badge method-get">GET</span></td><td>Burnout risk score (0–100) with fatigue signal detection</td></tr>
+            <tr><td>/api/ai/daily-plan</td><td><span class="method-badge method-get">GET</span></td><td>AI-generated daily sprint plan based on time of day</td></tr>
+            <tr><td>/api/ai/chat</td><td><span class="method-badge method-post">POST</span> <span class="method-badge method-delete">DEL</span></td><td>Persistent AI coach chat with long-term memory (DB-backed)</td></tr>
+            <tr><td>/api/ai/chat/history</td><td><span class="method-badge method-get">GET</span></td><td>Retrieve full cross-device synchronized chat history</td></tr>
+            <tr><td>/api/ai/schedule</td><td><span class="method-badge method-get">GET</span></td><td>Optimal schedule analysis (peak hours, peak days, heatmap)</td></tr>
+            <tr><td>/api/ai/recommendations</td><td><span class="method-badge method-get">GET</span></td><td>AI-curated reading list based on user performance data</td></tr>
+        </tbody>
+    </table>
+
+    <!-- Security -->
+    <div class="section-title">Security & Hardening</div>
+    <div class="security-row">
+        <div class="sec-badge"><strong>JWT Auth</strong><span>24hr token expiry</span></div>
+        <div class="sec-badge"><strong>Rate Limiting</strong><span>5–20 req/min per AI route</span></div>
+        <div class="sec-badge"><strong>Prompt Isolation</strong><span>system_instruction param</span></div>
+        <div class="sec-badge"><strong>CORS Whitelist</strong><span>Origin enforcement via .env</span></div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div><strong>FocusSprint</strong> · Full-Stack AI Productivity App · 3 DB Models · 16 Frontend Pages · 10 API Routes</div>
+        <div>Built with React, Flask, PostgreSQL & Google Gemini</div>
+    </div>
+
+</body>
+</html>
