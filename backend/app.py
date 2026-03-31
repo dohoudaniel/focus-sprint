@@ -27,6 +27,10 @@ def create_app():
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+
+    # Auto-create missing tables (safe — only creates tables that don't exist)
+    with app.app_context():
+        db.create_all()
     
     # CORS setup
     origins = [o.strip().rstrip('/') for o in os.getenv('CORS_ORIGINS', 'http://localhost:5173').split(',')]
@@ -34,6 +38,33 @@ def create_app():
 
     # Register Blueprints
     app.register_blueprint(ai_bp)
+
+    # Security headers — strip sensitive info from every response
+    @app.after_request
+    def add_security_headers(response):
+        response.headers['X-Content-Type-Options'] = 'nosniff'
+        response.headers['X-Frame-Options'] = 'DENY'
+        response.headers['X-XSS-Protection'] = '1; mode=block'
+        response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+        response.headers.pop('Server', None)  # Hide Flask/Werkzeug version
+        return response
+
+    # Global error handlers — ALWAYS return JSON, never HTML
+    @app.errorhandler(500)
+    def internal_error(error):
+        print(f"[500 ERROR] {error}")
+        db.session.rollback()
+        return jsonify({"msg": "Internal server error"}), 500
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({"msg": "Resource not found"}), 404
+
+    @app.errorhandler(Exception)
+    def handle_exception(error):
+        print(f"[UNHANDLED ERROR] {type(error).__name__}: {error}")
+        db.session.rollback()
+        return jsonify({"msg": "An unexpected error occurred"}), 500
 
     # Auth Routes
     @app.route('/api/auth/register', methods=['POST'])
@@ -74,14 +105,21 @@ def create_app():
 
     @app.route('/api/auth/login', methods=['POST'])
     def login():
-        data = request.get_json()
-        user = User.query.filter_by(email=data.get('email')).first()
-        
-        if user and user.check_password(data.get('password')):
-            access_token = create_access_token(identity=user.id)
-            return jsonify(access_token=access_token, user=user.to_dict()), 200
-        
-        return jsonify({"msg": "Bad email or password"}), 401
+        try:
+            data = request.get_json()
+            if not data or not data.get('email') or not data.get('password'):
+                return jsonify({"msg": "Email and password are required"}), 400
+
+            user = User.query.filter_by(email=data.get('email')).first()
+            
+            if user and user.check_password(data.get('password')):
+                access_token = create_access_token(identity=user.id)
+                return jsonify(access_token=access_token, user=user.to_dict()), 200
+            
+            return jsonify({"msg": "Bad email or password"}), 401
+        except Exception as e:
+            print(f"[LOGIN ERROR] {type(e).__name__}: {e}")
+            return jsonify({"msg": "Login temporarily unavailable. Please try again."}), 500
 
     # Session Routes
     @app.route('/api/sessions', methods=['GET'])
