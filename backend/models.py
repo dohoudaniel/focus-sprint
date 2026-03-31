@@ -44,7 +44,6 @@ class Session(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "user_id": self.user_id,
             "duration": self.duration,
             "startTime": self.start_time,
             "endTime": self.end_time,
@@ -63,8 +62,6 @@ class ChatMessage(db.Model):
 
     def to_dict(self):
         return {
-            "id": self.id,
-            "user_id": self.user_id,
             "role": self.role,
             "content": self.content,
             "created_at": self.created_at.isoformat()
