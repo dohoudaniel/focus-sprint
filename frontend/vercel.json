@@ -5,9 +5,6 @@
         "destination": "/"
       }
     ],
-    "toolbar": {
-      "enabled": false
-    },
     "headers": [
       {
         "source": "/(.*)",
